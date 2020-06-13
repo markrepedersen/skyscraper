@@ -1,0 +1,22 @@
+{
+    "name": "scraper",
+    "version": "1.0.0",
+    "description": "A Facebook scraper.",
+    "scripts": {
+        "scraper": "ts-node main.ts"
+    },
+    "keywords": [],
+    "author": "markrepedersen",
+    "license": "ISC",
+    "dependencies": {
+        "@types/yargs": "15.0.5",
+        "automark": "latest",
+        "yargs": "15.3.1"
+    },
+    "devDependencies": {
+        "mocha": "5.2.0",
+        "@types/mocha": "7.0.2",
+        "@types/node": "12.12.6",
+        "ts-node": "7.0.1"
+    }
+}
