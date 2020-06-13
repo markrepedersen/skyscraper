@@ -1,3 +1,6 @@
 * Abstract
+Given a very small amount of information about a person (e.g. a unique photo), it is interesting to be able to garner as much of their online presence as possible.
 * Usage
-* Dependencies
+#+begin_src bash
+npm run scraper -- -q <query>
+#+end_src
