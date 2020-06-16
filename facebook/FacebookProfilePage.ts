@@ -13,8 +13,6 @@ import {promises as fs, createWriteStream} from "fs";
 @log
 @validate
 export class FacebookProfilePage extends Page {
-  private static IMAGE_DIR = "./images/";
-
   @findBy("a.profilePicThumb img")
   protected profilePic!: WebComponent;
 
@@ -22,17 +20,13 @@ export class FacebookProfilePage extends Page {
     return elementIsVisible(() => this.profilePic);
   }
 
-  public async saveProfilePicture(location: string) {
+  public async saveProfilePicture(dir: string, filename: string) {
     let url: string = await this.profilePic.getElementAttribute("src");
-    await this.pipeToFile(url, location);
+    await this.pipeToFile(url, dir, filename);
   }
 
-  private async pipeToFile(url: string, filename: string) {
-    await fs.mkdir(FacebookProfilePage.IMAGE_DIR, {recursive: true});
-    get(url, (res) =>
-      res.pipe(
-        createWriteStream(`${FacebookProfilePage.IMAGE_DIR}/${filename}`)
-      )
-    );
+  private async pipeToFile(url: string, dir: string, filename: string) {
+    await fs.mkdir(dir, {recursive: true});
+    get(url, (res) => res.pipe(createWriteStream(`${dir}/${filename}`)));
   }
 }

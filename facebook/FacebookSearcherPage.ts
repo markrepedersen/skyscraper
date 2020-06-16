@@ -8,6 +8,7 @@ import {
   WebComponent,
 } from "automark";
 import {FacebookProfilePage} from "./FacebookProfilePage";
+import {Key} from "selenium-webdriver";
 
 @log
 @validate
@@ -15,27 +16,31 @@ export class FacebookSearchPage extends Page {
   @findBy("#initial_browse_result")
   protected searchResults!: WebComponent;
 
+  @findBy('//div[contains(@id,"u_ps") and @class="_akp"]')
+  protected paginator!: WebComponent;
+
   public loadCondition(): WaitCondition {
-    return elementIsVisible(() => this.searchResults);
+    return elementIsVisible(() => this.paginator);
   }
 
-  public async getProfiles(): Promise<void> {
+  public async getProfiles(dir: string): Promise<void> {
     let links = [];
     links.push(...(await this.getInitialContainerLinks()));
     links.push(...(await this.getSecondContainerLinks()));
     links.push(...(await this.getRemainingContainerLinks()));
-    await this.handleLinks(links);
+    await this.handleLinks(dir, links);
   }
 
-  private async handleLinks(links: string[]) {
+  private async handleLinks(dir: string, links: string[]) {
     let i = 0;
     for (const link of links) {
       await this.browser.navigate(link);
       await this.browser.waitUntilPageHasLoaded(FacebookProfilePage);
       let profilePage = new FacebookProfilePage(this.browser);
-      await profilePage.saveProfilePicture(`img${i}.jpg`);
+      await profilePage.saveProfilePicture(dir, `img${i}.jpg`);
       await (await this.browser.driver).navigate().back();
       await this.browser.waitUntilPageHasLoaded(FacebookSearchPage);
+      await this.type(Key.END);
       i++;
     }
   }
