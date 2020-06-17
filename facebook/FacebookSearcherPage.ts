@@ -8,7 +8,6 @@ import {
   WebComponent,
 } from "automark";
 import {FacebookProfilePage} from "./FacebookProfilePage";
-import {Key} from "selenium-webdriver";
 
 @log
 @validate
@@ -16,11 +15,8 @@ export class FacebookSearchPage extends Page {
   @findBy("#initial_browse_result")
   protected searchResults!: WebComponent;
 
-  @findBy('//div[contains(@id,"u_ps") and @class="_akp"]')
-  protected paginator!: WebComponent;
-
   public loadCondition(): WaitCondition {
-    return elementIsVisible(() => this.paginator);
+    return elementIsVisible(() => this.searchResults);
   }
 
   public async getProfiles(dir: string): Promise<void> {
@@ -32,16 +28,11 @@ export class FacebookSearchPage extends Page {
   }
 
   private async handleLinks(dir: string, links: string[]) {
-    let i = 0;
-    for (const link of links) {
-      await this.browser.navigate(link);
+    for (let i = 0; i < links.length; i++) {
+      await this.browser.navigate(links[i]);
       await this.browser.waitUntilPageHasLoaded(FacebookProfilePage);
       let profilePage = new FacebookProfilePage(this.browser);
       await profilePage.saveProfilePicture(dir, `img${i}.jpg`);
-      await (await this.browser.driver).navigate().back();
-      await this.browser.waitUntilPageHasLoaded(FacebookSearchPage);
-      await this.type(Key.END);
-      i++;
     }
   }
 
@@ -57,13 +48,30 @@ export class FacebookSearchPage extends Page {
     );
   }
 
+  private async waitForPagination(): Promise<boolean> {
+    await this.browser.driver.executeScript(
+      "window.scrollTo(0, document.body.scrollHeight)"
+    );
+    await (await this.browser.driver).sleep(1000);
+    return !(await this.browser.exists("#browse_end_of_results_footer"));
+  }
+
   private async getRemainingContainerLinks(): Promise<string[]> {
     let links = [];
     let i = 0;
-    while (await this.browser.exists(`#fbBrowseScrollingPagerContainer${i}`)) {
-      links.push(
-        ...(await this.getLinks(`#fbBrowseScrollingPagerContainer${i}`))
-      );
+    while (await this.waitForPagination() && i < 20) {
+      if (
+        await this.browser.exists(
+          `#fbBrowseScrollingPagerContainer${i} a[aria-hidden="true`
+        )
+      ) {
+        links.push(
+          ...(await this.getLinks(
+            `#fbBrowseScrollingPagerContainer${i++} a[aria-hidden="true"]`
+          ))
+        );
+        console.log(links);
+      }
     }
     return links;
   }
